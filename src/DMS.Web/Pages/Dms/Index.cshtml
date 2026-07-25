@@ -1,0 +1,130 @@
+@page
+@model DMS.Web.Pages.Dms.IndexModel
+@{
+    ViewData["Title"] = "Dokumenti";
+    var currentYear = DateTime.UtcNow.Year;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="bi bi-files me-2 text-primary"></i>
+        @(Model.IsFirmUser ? "Dokumenti klijenata" : "Moji dokumenti")
+    </h2>
+    @if (!Model.IsFirmUser)
+    {
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#upload-panel" aria-expanded="false">
+            <i class="bi bi-cloud-upload me-1"></i>Dodaj dokument
+        </button>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="doc-filters" class="row g-2 align-items-end" onsubmit="return false;">
+            <input type="hidden" id="page-input" name="pageNumber" value="@Model.PageNumber" />
+            @if (Model.IsFirmUser)
+            {
+                <div class="col-md-6">
+                    <label for="companyName" class="form-label">Naziv kompanije ili dokumenta</label>
+                    <input id="companyName" name="companyName" class="form-control" value="@Model.CompanyName" placeholder="Pretraži po kompaniji ili nazivu dokumenta" oninput="document.getElementById('page-input').value='1';" />
+                </div>
+            }
+            <div class="col-md-3">
+                <label for="year" class="form-label">Godina</label>
+                <select id="year" name="year" class="form-select" onchange="document.getElementById('page-input').value='1';">
+                    <option value="">Sve godine</option>
+                    @for (var y = currentYear; y >= currentYear - 10; y--)
+                    {
+                        if (Model.Year == y)
+                        {
+                            <option value="@y" selected>@y</option>
+                        }
+                        else
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="document.getElementById('doc-filters').reset(); document.getElementById('page-input').value='1'; htmx.trigger(document.body, 'refresh-docs');">
+                    <i class="bi bi-x-circle me-1"></i>Očisti filtere
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.IsFirmUser)
+{
+    <div class="collapse mb-4" id="upload-panel">
+        <div class="card border-primary shadow-sm">
+            <div class="card-header bg-primary text-white fw-semibold">
+                <i class="bi bi-cloud-upload me-1"></i>Dodaj novi dokument
+            </div>
+            <div class="card-body">
+                <form id="dms-upload-form" novalidate>
+                    <div class="mb-3">
+                        <label for="file-input" class="form-label fw-semibold">
+                            Datoteka <small class="text-muted">(maks. 3 MB)</small>
+                        </label>
+                        <input type="file" id="file-input" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes-input" class="form-label fw-semibold">Napomena <small class="text-muted">(opcionalno)</small></label>
+                        <textarea id="notes-input" class="form-control" rows="2" placeholder="Unesite napomenu za ovaj dokument..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="document-type-input" class="form-label fw-semibold">Vrsta dokumenta</label>
+                        <select id="document-type-input" class="form-select" required>
+                            <option value="KIF">KIF</option>
+                            <option value="KUF">KUF</option>
+                            <option value="Izvod">Izvod</option>
+                            <option value="Ostalo">Ostalo</option>
+                        </select>
+                    </div>
+
+                    <div class="progress mb-3 d-none" id="upload-progress-wrap" style="height:6px">
+                        <div id="upload-progress" class="progress-bar progress-bar-striped progress-bar-animated"
+                             role="progressbar" style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <div id="upload-status" class="alert d-none" role="alert"></div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload me-1"></i>Pošalji
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<div id="doc-list"
+     hx-get="/Dms?handler=Documents"
+     hx-trigger="load, refresh-docs from:body, input changed delay:300ms from:#doc-filters, change from:#doc-filters"
+     hx-include="#doc-filters"
+     hx-swap="innerHTML"
+     hx-indicator="#doc-spinner">
+    <div id="doc-spinner" class="text-center py-5 htmx-indicator">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Učitavanje...</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            document.addEventListener('click', function (e) {
+                const link = e.target.closest('.js-download-doc, .js-preview-doc');
+                if (!link) return;
+
+                setTimeout(function () {
+                    htmx.trigger(document.body, 'refresh-docs');
+                }, 500);
+            });
+        })();
+    </script>
+    <script src="~/js/upload.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,17 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# User/IDE files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local config overrides
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# Logs
+*.log

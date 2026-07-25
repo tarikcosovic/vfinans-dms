@@ -1,0 +1,190 @@
+@model DMS.Web.Pages.Dms.DocumentListViewModel
+@{
+    static string FormatSize(long bytes) => bytes switch
+    {
+        >= 1_048_576 => $"{bytes / 1_048_576.0:F1} MB",
+        >= 1_024     => $"{bytes / 1_024.0:F1} KB",
+        _            => $"{bytes} B",
+    };
+
+    static string FormatStatus(string status) => status switch
+    {
+        "Ready" => "Spreman",
+        "Pending" => "Na čekanju",
+        "Failed" => "Neuspješno",
+        _ => status,
+    };
+
+    static string FormatDocumentType(string documentType) => documentType switch
+    {
+        "KIF" => "KIF",
+        "KUF" => "KUF",
+        "Izvod" => "Izvod",
+        "Ostalo" => "Ostalo",
+        _ => documentType,
+    };
+}
+
+@if (!Model.Documents.Any())
+{
+    <div class="alert alert-info d-flex align-items-center">
+        <i class="bi bi-info-circle me-2"></i>
+        @(Model.IsFirmUser ? "Nijedan dokument ne odgovara odabranim filterima." : "Još uvijek nemate učitanih dokumenata.")
+    </div>
+}
+else
+{
+    var startPage = Math.Max(1, Model.CurrentPage - 2);
+    var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+
+    if (endPage - startPage < 4)
+    {
+        if (startPage == 1)
+        {
+            endPage = Math.Min(Model.TotalPages, startPage + 4);
+        }
+        else if (endPage == Model.TotalPages)
+        {
+            startPage = Math.Max(1, endPage - 4);
+        }
+    }
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    @if (Model.IsFirmUser)
+                    {
+                        <th>Kompanija</th>
+                    }
+                    <th>Naziv datoteke</th>
+                    <th>Veličina</th>
+                    <th>Tip</th>
+                    <th>Vrsta</th>
+                    <th>Status</th>
+                    @if (Model.IsFirmUser)
+                    {
+                        <th>Pročitano</th>
+                        <th>Preuzeto</th>
+                    }
+                    <th>Učitano</th>
+                    <th class="text-end">Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var doc in Model.Documents)
+                {
+                    var badgeClass = doc.Status switch
+                    {
+                        "Ready"   => "bg-success",
+                        "Pending" => "bg-warning text-dark",
+                        _         => "bg-danger",
+                    };
+
+                    <tr>
+                        @if (Model.IsFirmUser)
+                        {
+                            <td class="text-nowrap">@doc.OwnerCompanyName</td>
+                        }
+                        <td>
+                            <i class="bi bi-file-earmark me-1 text-secondary"></i>
+                            @doc.FileName
+                            @if (!string.IsNullOrWhiteSpace(doc.Notes))
+                            {
+                                <br /><small class="text-muted">@doc.Notes</small>
+                            }
+                        </td>
+                        <td class="text-nowrap">@FormatSize(doc.SizeBytes)</td>
+                        <td><span class="badge bg-secondary">@doc.ContentType</span></td>
+                        <td class="text-nowrap"><span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">@FormatDocumentType(doc.DocumentType)</span></td>
+                        <td><span class="badge @badgeClass">@FormatStatus(doc.Status)</span></td>
+                        @if (Model.IsFirmUser)
+                        {
+                            <td class="text-nowrap">
+                                @if (doc.IsRead)
+                                {
+                                   <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Da</span>
+                                }
+                                else
+                                {
+                                   <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Ne</span>
+                                }
+                            </td>
+                            <td class="text-nowrap">
+                                @if (doc.IsDownloaded)
+                                {
+                                   <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Da</span>
+                                }
+                                else
+                                {
+                                   <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Ne</span>
+                                }
+                            </td>
+                        }
+                        <td class="text-nowrap text-muted small">@doc.CreatedAtUtc.ToString("dd MMM yyyy HH:mm")</td>
+                        <td class="text-end">
+                            @if (doc.Status == "Ready")
+                            {
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Akcije dokumenta">
+                                   <a href="/Dms?handler=Preview&documentId=@doc.Id"
+                                      class="btn btn-outline-secondary js-preview-doc"
+                                      target="_blank"
+                                      title="Otvori">
+                                       <i class="bi bi-eye"></i>
+                                   </a>
+                                   <a href="/Dms?handler=Download&documentId=@doc.Id"
+                                      class="btn btn-outline-primary js-download-doc"
+                                      target="_blank"
+                                      title="Preuzmi">
+                                       <i class="bi bi-download"></i>
+                                   </a>
+                                </div>
+                            }
+                            else if (doc.Status == "Pending")
+                            {
+                                <span class="text-muted small"><i class="bi bi-hourglass-split"></i> Čeka se otpremanje</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <p class="text-muted small mb-0">Ukupno dokumenata: @Model.TotalCount · Stranica @Model.CurrentPage/@Model.TotalPages</p>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Paginacija dokumenata">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : null)">
+                        <a href="#"
+                           class="page-link"
+                           onclick="document.getElementById('page-input').value='@(Model.CurrentPage - 1)'; htmx.trigger(document.body, 'refresh-docs'); return false;">
+                            Prethodna
+                        </a>
+                    </li>
+
+                    @for (var p = startPage; p <= endPage; p++)
+                    {
+                        <li class="page-item @(p == Model.CurrentPage ? "active" : null)">
+                            <a href="#"
+                               class="page-link"
+                               onclick="document.getElementById('page-input').value='@p'; htmx.trigger(document.body, 'refresh-docs'); return false;">
+                                @p
+                            </a>
+                        </li>
+                    }
+
+                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : null)">
+                        <a href="#"
+                           class="page-link"
+                           onclick="document.getElementById('page-input').value='@(Model.CurrentPage + 1)'; htmx.trigger(document.body, 'refresh-docs'); return false;">
+                            Sljedeća
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+}

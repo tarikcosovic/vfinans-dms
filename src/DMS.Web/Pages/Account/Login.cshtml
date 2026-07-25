@@ -1,0 +1,42 @@
+@page
+@model DMS.Web.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Prijava";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">
+                    <i class="bi bi-box-arrow-in-right me-2 text-warning"></i>Prijava
+                </h2>
+
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Email" class="form-label fw-semibold">Email adresa</label>
+                        <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="vas@email.ba" />
+                        <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Input.Password" class="form-label fw-semibold">Lozinka</label>
+                        <input asp-for="Input.Password" class="form-control" type="password" autocomplete="current-password" />
+                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Prijavi se
+                    </button>
+                </form>
+
+                <hr class="my-3" />
+                <p class="text-center mb-0 text-muted small">
+                    Nemate nalog? <a asp-page="/Account/Register">Registrujte se</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
