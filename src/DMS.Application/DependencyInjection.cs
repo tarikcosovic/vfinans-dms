@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<GetDownloadUrlUseCase>();
         services.AddScoped<GetPreviewUrlUseCase>();
         services.AddScoped<ListClientApprovalsUseCase>();
+        services.AddScoped<ListClientCompanyNamesUseCase>();
         services.AddScoped<ApproveClientUseCase>();
         services.AddScoped<DeactivateClientUseCase>();
         services.AddScoped<ChangeOwnPasswordUseCase>();

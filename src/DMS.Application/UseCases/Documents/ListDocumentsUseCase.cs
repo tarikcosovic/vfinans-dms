@@ -16,6 +16,7 @@ public sealed class ListDocumentsUseCase(
         Guid userId,
         string role,
         string? companyName,
+        string? searchTerm,
         int? year,
         CancellationToken ct = default)
     {
@@ -39,13 +40,19 @@ public sealed class ListDocumentsUseCase(
 
         if (role == RoleNames.Firm && !string.IsNullOrWhiteSpace(companyName))
         {
-            var term = companyName.Trim();
+            var selectedCompany = companyName.Trim();
             docList = docList.Where(d =>
             {
                 var ownerCompany = companyMap.TryGetValue(d.OwnerUserId, out var c) ? c : string.Empty;
-                return ownerCompany.Contains(term, StringComparison.OrdinalIgnoreCase)
-                    || d.FileName.Contains(term, StringComparison.OrdinalIgnoreCase);
+                return ownerCompany.Equals(selectedCompany, StringComparison.OrdinalIgnoreCase);
             }).ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim();
+            docList = docList.Where(d =>
+                d.FileName.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
         }
 
         return docList.Select(d => new DocumentDto(

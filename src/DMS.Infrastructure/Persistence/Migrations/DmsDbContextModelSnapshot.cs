@@ -3,8 +3,8 @@ using System;
 using DMS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,59 +18,59 @@ namespace DMS.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.4")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("DMS.Domain.Entities.Document", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("char(36)")
                         .HasColumnName("id");
 
                     b.Property<string>("ContentType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("longtext")
                         .HasColumnName("content_type");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("datetime(6)")
                         .HasColumnName("created_at_utc");
 
                     b.Property<string>("DocumentType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("longtext")
                         .HasColumnName("document_type");
 
                     b.Property<string>("FileKey")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("longtext")
                         .HasColumnName("file_key");
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("longtext")
                         .HasColumnName("file_name");
 
                     b.Property<bool>("IsDownloaded")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("tinyint(1)")
                         .HasDefaultValue(false)
                         .HasColumnName("downloaded");
 
                     b.Property<bool>("IsRead")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("tinyint(1)")
                         .HasDefaultValue(false)
                         .HasColumnName("is_read");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("text")
+                        .HasColumnType("longtext")
                         .HasColumnName("notes");
 
                     b.Property<Guid>("OwnerUserId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("char(36)")
                         .HasColumnName("owner_user_id");
 
                     b.Property<long>("SizeBytes")
@@ -79,7 +79,7 @@ namespace DMS.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(255)")
                         .HasColumnName("status");
 
                     b.HasKey("Id");
@@ -97,55 +97,55 @@ namespace DMS.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("char(36)")
                         .HasColumnName("id");
 
                     b.Property<DateTime?>("ApprovedAtUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("datetime(6)")
                         .HasColumnName("approved_at_utc");
 
                     b.Property<Guid?>("ApprovedByUserId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("char(36)")
                         .HasColumnName("approved_by_user_id");
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasColumnType("varchar(200)")
                         .HasColumnName("company_name");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(320)
-                        .HasColumnType("character varying(320)")
+                        .HasColumnType("varchar(320)")
                         .HasColumnName("email");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("first_name");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("tinyint(1)")
                         .HasDefaultValue(false)
                         .HasColumnName("is_active");
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("last_name");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("longtext")
                         .HasColumnName("password_hash");
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("longtext")
                         .HasColumnName("role");
 
                     b.HasKey("Id");

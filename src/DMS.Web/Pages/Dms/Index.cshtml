@@ -24,12 +24,29 @@
             <input type="hidden" id="page-input" name="pageNumber" value="@Model.PageNumber" />
             @if (Model.IsFirmUser)
             {
-                <div class="col-md-6">
-                    <label for="companyName" class="form-label">Naziv kompanije ili dokumenta</label>
-                    <input id="companyName" name="companyName" class="form-control" value="@Model.CompanyName" placeholder="Pretraži po kompaniji ili nazivu dokumenta" oninput="document.getElementById('page-input').value='1';" />
+                <div class="col-md-4">
+                    <label for="companyName" class="form-label">Kompanija</label>
+                    <select id="companyName" name="companyName" class="form-select" onchange="document.getElementById('page-input').value='1';">
+                        <option value="">Sve kompanije</option>
+                        @foreach (var company in Model.CompanyOptions)
+                        {
+                            if (string.Equals(Model.CompanyName, company, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@company" selected>@company</option>
+                            }
+                            else
+                            {
+                                <option value="@company">@company</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="searchTerm" class="form-label">Naziv dokumenta</label>
+                    <input id="searchTerm" name="searchTerm" class="form-control" value="@Model.SearchTerm" placeholder="Pretraži po nazivu dokumenta" oninput="document.getElementById('page-input').value='1';" />
                 </div>
             }
-            <div class="col-md-3">
+            <div class="@(Model.IsFirmUser ? "col-md-2" : "col-md-3")">
                 <label for="year" class="form-label">Godina</label>
                 <select id="year" name="year" class="form-select" onchange="document.getElementById('page-input').value='1';">
                     <option value="">Sve godine</option>
@@ -46,7 +63,7 @@
                     }
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="@(Model.IsFirmUser ? "col-md-2" : "col-md-3")">
                 <button type="button" class="btn btn-outline-secondary w-100" onclick="document.getElementById('doc-filters').reset(); document.getElementById('page-input').value='1'; htmx.trigger(document.body, 'refresh-docs');">
                     <i class="bi bi-x-circle me-1"></i>Očisti filtere
                 </button>

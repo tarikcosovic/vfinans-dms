@@ -9,6 +9,16 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (!builder.Environment.IsDevelopment())
+{
+    RequireProductionSetting("ConnectionStrings:DefaultConnection");
+    RequireProductionSetting("R2:AccessKeyId");
+    RequireProductionSetting("R2:SecretAccessKey");
+    RequireProductionSetting("R2:BucketName");
+    RequireProductionSetting("R2:ServiceUrl");
+    RequireProductionSetting("Seeding:FirmUsersInitialPassword");
+}
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -41,6 +51,12 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+{
+    app.Urls.Add($"http://0.0.0.0:{port}");
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -64,3 +80,12 @@ using (var scope = app.Services.CreateScope())
 
 app.MapRazorPages();
 app.Run();
+
+void RequireProductionSetting(string key)
+{
+    var value = builder.Configuration[key];
+    if (string.IsNullOrWhiteSpace(value) || value.Contains('<') || value.Contains('>'))
+    {
+        throw new InvalidOperationException($"Missing production configuration for '{key}'. Set it as an environment variable.");
+    }
+}
