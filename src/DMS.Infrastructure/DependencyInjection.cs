@@ -18,11 +18,11 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         // Database
-        var connectionString = configuration.GetConnectionString("PostgreSql")
-            ?? throw new InvalidOperationException("Missing ConnectionStrings:PostgreSql.");
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection.");
 
         services.AddDbContext<DmsDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 0))));
 
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
@@ -52,4 +52,3 @@ public static class DependencyInjection
         return services;
     }
 }
-

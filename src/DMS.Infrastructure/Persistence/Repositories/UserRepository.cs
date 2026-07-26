@@ -39,6 +39,17 @@ internal sealed class UserRepository(DmsDbContext db) : IUserRepository
         return list;
     }
 
+    public async Task<IReadOnlyList<string>> ListClientCompanyNamesAsync(CancellationToken ct = default)
+    {
+        var companies = await db.Users
+            .Where(u => u.Role == UserRole.Client && !string.IsNullOrWhiteSpace(u.CompanyName))
+            .Select(u => u.CompanyName)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToListAsync(ct);
+        return companies;
+    }
+
     public async Task<IReadOnlyDictionary<Guid, string>> GetCompanyNamesByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken ct = default)
     {
         var ids = userIds.Distinct().ToList();

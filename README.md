@@ -1,6 +1,6 @@
 # V Finans DMS
 
-Document management portal for V Finans built with .NET 9, Razor Pages, PostgreSQL, and Cloudflare R2 direct uploads.
+Document management portal for V Finans built with .NET 9, Razor Pages, MySQL, and Cloudflare R2 direct uploads.
 
 ## Features
 
@@ -14,7 +14,7 @@ Document management portal for V Finans built with .NET 9, Razor Pages, PostgreS
 
 - .NET 9 (Razor Pages)
 - Clean Architecture (`Domain`, `Application`, `Infrastructure`, `Web`)
-- Entity Framework Core + PostgreSQL
+- Entity Framework Core + MySQL
 - Cloudflare R2 (S3-compatible presigned URLs)
 - HTMX + Bootstrap
 
@@ -30,16 +30,20 @@ src/
 
 ## Configuration
 
-Set values in `src/DMS.Web/appsettings.json` (or environment-specific overrides):
+Keep placeholders in `src/DMS.Web/appsettings.json`. Set real secrets through environment variables.
 
-- `ConnectionStrings:PostgreSql`
-- `R2:AccessKeyId`
-- `R2:SecretAccessKey`
-- `R2:BucketName`
-- `R2:ServiceUrl`
-- `Seeding:FirmUsersInitialPassword`
+Use these variable names:
 
-Use placeholders in source control and keep real values in local/secure config.
+- `ConnectionStrings__DefaultConnection`
+- `R2__AccessKeyId`
+- `R2__SecretAccessKey`
+- `R2__BucketName`
+- `R2__ServiceUrl`
+- `Seeding__FirmUsersInitialPassword`
+- `ASPNETCORE_ENVIRONMENT=Production`
+
+For Render, add them in **Web Service -> Environment**.  
+For local development, prefer `dotnet user-secrets` (or `appsettings.Development.json`, which is gitignored).
 
 ## Run Locally
 

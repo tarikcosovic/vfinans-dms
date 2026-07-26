@@ -1,6 +1,7 @@
 using DMS.Application.DTOs.Documents;
 using DMS.Application.Interfaces;
 using DMS.Application.UseCases.Documents;
+using DMS.Application.UseCases.Users;
 using DMS.Domain.Constants;
 using DMS.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,7 @@ public class IndexModel(
     ConfirmUploadUseCase confirmUpload,
     GetDownloadUrlUseCase getDownloadUrl,
     GetPreviewUrlUseCase getPreviewUrl,
+    ListClientCompanyNamesUseCase listClientCompanyNames,
     ICurrentUser currentUser) : PageModel
 {
     private const int PageSize = 10;
@@ -24,24 +26,32 @@ public class IndexModel(
     public string? CompanyName { get; set; }
 
     [BindProperty(SupportsGet = true)]
+    public string? SearchTerm { get; set; }
+
+    [BindProperty(SupportsGet = true)]
     public int? Year { get; set; }
 
     [BindProperty(SupportsGet = true)]
     public int PageNumber { get; set; } = 1;
 
     public IReadOnlyList<DocumentDto> Documents { get; private set; } = [];
+    public IReadOnlyList<string> CompanyOptions { get; private set; } = [];
     public bool IsFirmUser => currentUser.Role == RoleNames.Firm;
 
     public async Task OnGetAsync(CancellationToken ct)
     {
         PageNumber = Math.Max(1, PageNumber);
-        var allDocuments = await listDocuments.ExecuteAsync(currentUser.UserId, currentUser.Role, CompanyName, Year, ct);
+        var allDocuments = await listDocuments.ExecuteAsync(currentUser.UserId, currentUser.Role, CompanyName, SearchTerm, Year, ct);
         Documents = BuildDocumentListViewModel(allDocuments, IsFirmUser, PageNumber).Documents;
+        if (IsFirmUser)
+        {
+            CompanyOptions = await listClientCompanyNames.ExecuteAsync(ct);
+        }
     }
 
-    public async Task<IActionResult> OnGetDocumentsAsync(string? companyName, int? year, int pageNumber = 1, CancellationToken ct = default)
+    public async Task<IActionResult> OnGetDocumentsAsync(string? companyName, string? searchTerm, int? year, int pageNumber = 1, CancellationToken ct = default)
     {
-        var allDocuments = await listDocuments.ExecuteAsync(currentUser.UserId, currentUser.Role, companyName, year, ct);
+        var allDocuments = await listDocuments.ExecuteAsync(currentUser.UserId, currentUser.Role, companyName, searchTerm, year, ct);
         var viewModel = BuildDocumentListViewModel(allDocuments, IsFirmUser, pageNumber);
         Documents = viewModel.Documents;
         return Partial("_DocumentList", viewModel);
