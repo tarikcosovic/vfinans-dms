@@ -2,6 +2,11 @@
 **/bin/
 **/obj/
 
+# Publish and deployment artifacts
+publish/
+deploy.zip
+*.zip
+
 # User/IDE files
 .vs/
 *.user
@@ -12,6 +17,12 @@
 # Local config overrides
 **/appsettings.Development.json
 **/appsettings.Local.json
+**/appsettings.Production.json
+
+# Server-only deployment files
+web.config
+logs/
+stdout_*.log
 
 # Logs
 *.log
