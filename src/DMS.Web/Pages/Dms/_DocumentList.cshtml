@@ -23,6 +23,9 @@
         "Ostalo" => "Ostalo",
         _ => documentType,
     };
+
+    static string Truncate(string value, int maxLength) =>
+        value.Length > maxLength ? $"{value[..(maxLength - 2)]}.." : value;
 }
 
 @if (!Model.Documents.Any())
@@ -84,18 +87,18 @@ else
                     <tr>
                         @if (Model.IsFirmUser)
                         {
-                            <td class="text-nowrap">@doc.OwnerCompanyName</td>
+                            <td class="text-nowrap" title="@doc.OwnerCompanyName">@Truncate(doc.OwnerCompanyName, 40)</td>
                         }
                         <td>
                             <i class="bi bi-file-earmark me-1 text-secondary"></i>
-                            @doc.FileName
+                            <span title="@doc.FileName">@Truncate(doc.FileName, 40)</span>
                             @if (!string.IsNullOrWhiteSpace(doc.Notes))
                             {
                                 <br /><small class="text-muted">@doc.Notes</small>
                             }
                         </td>
                         <td class="text-nowrap">@FormatSize(doc.SizeBytes)</td>
-                        <td><span class="badge bg-secondary">@doc.ContentType</span></td>
+                        <td><span class="badge bg-secondary" title="@doc.ContentType">@Truncate(doc.ContentType, 20)</span></td>
                         <td class="text-nowrap"><span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">@FormatDocumentType(doc.DocumentType)</span></td>
                         <td><span class="badge @badgeClass">@FormatStatus(doc.Status)</span></td>
                         @if (Model.IsFirmUser)
