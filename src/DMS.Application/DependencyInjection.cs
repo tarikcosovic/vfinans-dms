@@ -1,5 +1,6 @@
 using DMS.Application.UseCases.Auth;
 using DMS.Application.UseCases.Documents;
+using DMS.Application.UseCases.Games;
 using DMS.Application.UseCases.Users;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,8 @@ public static class DependencyInjection
         services.AddScoped<GetDownloadUrlUseCase>();
         services.AddScoped<GetPreviewUrlUseCase>();
         services.AddScoped<DeleteDocumentUseCase>();
+        services.AddScoped<ListGameLeaderboardUseCase>();
+        services.AddScoped<SubmitGameScoreUseCase>();
         services.AddScoped<ListClientApprovalsUseCase>();
         services.AddScoped<ListClientCompanyNamesUseCase>();
         services.AddScoped<ApproveClientUseCase>();

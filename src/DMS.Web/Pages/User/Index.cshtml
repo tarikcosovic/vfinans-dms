@@ -27,11 +27,15 @@
                     <dd class="col-sm-8">
                         @if (Model.Role == "Firm")
                         {
-                            <span class="badge bg-primary"><i class="bi bi-building me-1"></i>Računovodstveni servis</span>
+                            <span class="badge bg-primary" id="coin-game-trigger" style="cursor: default">
+                                <i class="bi bi-building me-1"></i>Računovodstveni servis
+                            </span>
                         }
                         else
                         {
-                            <span class="badge bg-secondary"><i class="bi bi-person me-1"></i>Klijent</span>
+                            <span class="badge bg-secondary" id="coin-game-trigger" style="cursor: default">
+                                <i class="bi bi-person me-1"></i>Klijent
+                            </span>
                         }
                     </dd>
 
@@ -81,6 +85,216 @@
     </div>
 </div>
 
+<div class="modal fade" id="coin-game-modal" tabindex="-1" aria-labelledby="coin-game-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="coin-game-title">
+                    <i class="bi bi-coin me-2 text-warning"></i>Uhvati novčić
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-pills nav-fill mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#coin-game-play"
+                                type="button" role="tab">Igra</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="coin-leaderboard-tab" data-bs-toggle="pill"
+                                data-bs-target="#coin-game-leaderboard" type="button" role="tab">Top 10</button>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="coin-game-play" role="tabpanel">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Rezultat: <strong id="coin-game-score">0</strong></span>
+                            <span>Vrijeme: <strong id="coin-game-time">30</strong>s</span>
+                        </div>
+                        <div id="coin-game-board"
+                             class="position-relative overflow-hidden rounded border bg-light"
+                             style="height: 280px">
+                            <div id="coin-game-message"
+                                 class="position-absolute top-50 start-50 translate-middle text-center text-muted">
+                                Uhvatite što više novčića za 30 sekundi.
+                            </div>
+                            <button id="coin-game-coin"
+                                    type="button"
+                                    class="btn btn-warning rounded-circle position-absolute d-none p-0 shadow"
+                                    style="width: 44px; height: 44px"
+                                    aria-label="Uhvati novčić">
+                                <i class="bi bi-coin"></i>
+                            </button>
+                        </div>
+                        <div id="coin-game-result" class="small text-center mt-2"></div>
+                    </div>
+                    <div class="tab-pane fade" id="coin-game-leaderboard" role="tabpanel">
+                        <div id="coin-leaderboard-loading" class="text-center text-muted py-4">Učitavanje...</div>
+                        <div class="table-responsive d-none" id="coin-leaderboard-table-wrap">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr><th>#</th><th>Igrač</th><th class="text-end">Rezultat</th></tr>
+                                </thead>
+                                <tbody id="coin-leaderboard-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="coin-game-start" type="button" class="btn btn-primary">Pokreni</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const modal = document.getElementById('coin-game-modal');
+            const trigger = document.getElementById('coin-game-trigger');
+            const board = document.getElementById('coin-game-board');
+            const coin = document.getElementById('coin-game-coin');
+            const message = document.getElementById('coin-game-message');
+            const result = document.getElementById('coin-game-result');
+            const scoreElement = document.getElementById('coin-game-score');
+            const timeElement = document.getElementById('coin-game-time');
+            const startButton = document.getElementById('coin-game-start');
+            const leaderboardTab = document.getElementById('coin-leaderboard-tab');
+            const leaderboardBody = document.getElementById('coin-leaderboard-body');
+            const leaderboardLoading = document.getElementById('coin-leaderboard-loading');
+            const leaderboardWrap = document.getElementById('coin-leaderboard-table-wrap');
+            let score = 0;
+            let timeLeft = 30;
+            let timer;
+            let active = false;
+
+            trigger.addEventListener('click', function () {
+                bootstrap.Modal.getOrCreateInstance(modal).show();
+                loadLeaderboard();
+            });
+
+            function moveCoin() {
+                const maxLeft = board.clientWidth - coin.offsetWidth;
+                const maxTop = board.clientHeight - coin.offsetHeight;
+                coin.style.left = Math.floor(Math.random() * Math.max(1, maxLeft)) + 'px';
+                coin.style.top = Math.floor(Math.random() * Math.max(1, maxTop)) + 'px';
+            }
+
+            function renderLeaderboard(entries) {
+                leaderboardBody.replaceChildren();
+                if (entries.length === 0) {
+                    const row = document.createElement('tr');
+                    const cell = document.createElement('td');
+                    cell.colSpan = 3;
+                    cell.className = 'text-center text-muted';
+                    cell.textContent = 'Još nema rezultata.';
+                    row.appendChild(cell);
+                    leaderboardBody.appendChild(row);
+                } else {
+                    entries.forEach(function (entry) {
+                        const row = document.createElement('tr');
+                        const rank = document.createElement('td');
+                        const name = document.createElement('td');
+                        const points = document.createElement('td');
+                        rank.textContent = entry.rank;
+                        name.textContent = entry.playerName;
+                        points.textContent = entry.score;
+                        points.className = 'text-end fw-semibold';
+                        row.append(rank, name, points);
+                        leaderboardBody.appendChild(row);
+                    });
+                }
+                leaderboardLoading.classList.add('d-none');
+                leaderboardWrap.classList.remove('d-none');
+            }
+
+            async function loadLeaderboard() {
+                leaderboardLoading.classList.remove('d-none');
+                leaderboardWrap.classList.add('d-none');
+                const response = await fetch('/User?handler=GameLeaderboard');
+                if (!response.ok) {
+                    leaderboardLoading.textContent = 'Tabela trenutno nije dostupna.';
+                    return;
+                }
+                renderLeaderboard(await response.json());
+            }
+
+            async function submitScore() {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+                const response = await fetch('/User?handler=SubmitGameScore', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: new URLSearchParams({ score: score }).toString()
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    result.textContent = data.error ?? 'Rezultat nije moguće sačuvati.';
+                    result.className = 'small text-center mt-2 text-danger';
+                    return;
+                }
+                result.textContent = data.saved
+                    ? 'Novi rezultat je upisan na tabelu!'
+                    : 'Rezultat nije nadmašio vaš najbolji rezultat ili Top 10.';
+                result.className = 'small text-center mt-2 ' + (data.saved ? 'text-success' : 'text-muted');
+                renderLeaderboard(data.leaderboard);
+            }
+
+            function finish() {
+                active = false;
+                clearInterval(timer);
+                coin.classList.add('d-none');
+                message.textContent = 'Vrijeme je isteklo! Rezultat: ' + score;
+                message.classList.remove('d-none');
+                startButton.textContent = 'Igraj ponovo';
+                submitScore();
+            }
+
+            function start() {
+                clearInterval(timer);
+                score = 0;
+                timeLeft = 30;
+                active = true;
+                scoreElement.textContent = score;
+                timeElement.textContent = timeLeft;
+                result.textContent = '';
+                message.classList.add('d-none');
+                coin.classList.remove('d-none');
+                startButton.textContent = 'Ponovo';
+                moveCoin();
+
+                timer = setInterval(function () {
+                    timeLeft -= 1;
+                    timeElement.textContent = timeLeft;
+                    if (timeLeft <= 0) finish();
+                }, 1000);
+            }
+
+            coin.addEventListener('click', function () {
+                if (!active) return;
+                score += 1;
+                scoreElement.textContent = score;
+                moveCoin();
+            });
+
+            leaderboardTab.addEventListener('shown.bs.tab', loadLeaderboard);
+            startButton.addEventListener('click', start);
+            modal.addEventListener('hidden.bs.modal', function () {
+                clearInterval(timer);
+                active = false;
+                coin.classList.add('d-none');
+                message.textContent = 'Uhvatite što više novčića za 30 sekundi.';
+                message.classList.remove('d-none');
+                scoreElement.textContent = '0';
+                timeElement.textContent = '30';
+                result.textContent = '';
+                startButton.textContent = 'Pokreni';
+            });
+        })();
+    </script>
 }

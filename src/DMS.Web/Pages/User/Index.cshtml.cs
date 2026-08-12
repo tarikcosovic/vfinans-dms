@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using DMS.Application.Interfaces;
+using DMS.Application.UseCases.Games;
 using DMS.Application.UseCases.Users;
 using DMS.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +12,9 @@ namespace DMS.Web.Pages.User;
 [Authorize]
 public class IndexModel(
     ICurrentUser currentUser,
-    ChangeOwnPasswordUseCase changeOwnPassword) : PageModel
+    ChangeOwnPasswordUseCase changeOwnPassword,
+    ListGameLeaderboardUseCase listGameLeaderboard,
+    SubmitGameScoreUseCase submitGameScore) : PageModel
 {
     [BindProperty]
     public ChangePasswordInputModel PasswordInput { get; set; } = new();
@@ -58,6 +61,25 @@ public class IndexModel(
             ModelState.AddModelError(string.Empty, ex.Message);
             LoadProfileDetails(currentUser);
             return Page();
+        }
+    }
+
+    public async Task<IActionResult> OnGetGameLeaderboardAsync(CancellationToken ct)
+    {
+        var leaderboard = await listGameLeaderboard.ExecuteAsync(ct);
+        return new JsonResult(leaderboard);
+    }
+
+    public async Task<IActionResult> OnPostSubmitGameScoreAsync(int score, CancellationToken ct)
+    {
+        try
+        {
+            var result = await submitGameScore.ExecuteAsync(currentUser.UserId, score, ct);
+            return new JsonResult(result);
+        }
+        catch (DomainException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 

@@ -27,6 +27,7 @@ public static class DependencyInjection
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
+        services.AddScoped<IGameScoreRepository, GameScoreRepository>();
 
         // Cloudflare R2 storage
         var r2 = configuration.GetSection("R2").Get<R2Options>()

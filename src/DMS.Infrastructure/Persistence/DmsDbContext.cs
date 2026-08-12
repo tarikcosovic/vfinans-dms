@@ -7,6 +7,7 @@ public sealed class DmsDbContext(DbContextOptions<DmsDbContext> options) : DbCon
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<Document> Documents => Set<Document>();
+    public DbSet<GameScore> GameScores => Set<GameScore>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
