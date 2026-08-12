@@ -12,6 +12,7 @@ public sealed class Document
     public string FileKey { get; private set; } = string.Empty;
     public DocumentStatus Status { get; private set; }
     public string FileName { get; private set; } = string.Empty;
+    public string Rename { get; private set; } = string.Empty;
     public string ContentType { get; private set; } = string.Empty;
     public DocumentType DocumentType { get; private set; }
     public long SizeBytes { get; private set; }
@@ -22,7 +23,7 @@ public sealed class Document
 
     public static Document CreatePending(
         Guid id, Guid ownerUserId, string fileKey,
-        string fileName, string contentType, DocumentType documentType, long sizeBytes,
+        string fileName, string rename, string contentType, DocumentType documentType, long sizeBytes,
         DateTime createdAtUtc, string? notes = null) =>
         new()
         {
@@ -31,6 +32,7 @@ public sealed class Document
             FileKey = fileKey,
             Status = DocumentStatus.Pending,
             FileName = fileName,
+            Rename = rename.Trim(),
             ContentType = contentType,
             DocumentType = documentType,
             SizeBytes = sizeBytes,

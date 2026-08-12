@@ -5,6 +5,7 @@ public sealed record DocumentDto(
     Guid OwnerUserId,
     string OwnerCompanyName,
     string FileName,
+    string Rename,
     string ContentType,
     string DocumentType,
     long SizeBytes,

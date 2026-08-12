@@ -52,12 +52,19 @@
         clearStatus();
 
         const fileInput = document.getElementById('file-input');
+        const renameInput = document.getElementById('rename-input');
         const notesInput = document.getElementById('notes-input');
         const documentTypeInput = document.getElementById('document-type-input');
         const file = fileInput?.files?.[0];
 
         if (!file) {
             setStatus('Molimo odaberite datoteku prije slanja.', 'warning');
+            return;
+        }
+
+        const rename = renameInput?.value?.trim() ?? '';
+        if (!rename) {
+            setStatus('Molimo unesite naziv dokumenta.', 'warning');
             return;
         }
 
@@ -82,6 +89,7 @@
 
             const urlRes = await postForm('/Dms?handler=RequestUpload', {
                 fileName:    file.name,
+                rename:      rename,
                 contentType: file.type || 'application/octet-stream',
                 documentType: documentType,
                 sizeBytes:   file.size,

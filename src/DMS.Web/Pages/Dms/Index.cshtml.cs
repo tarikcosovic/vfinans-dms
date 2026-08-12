@@ -17,6 +17,7 @@ public class IndexModel(
     ConfirmUploadUseCase confirmUpload,
     GetDownloadUrlUseCase getDownloadUrl,
     GetPreviewUrlUseCase getPreviewUrl,
+    DeleteDocumentUseCase deleteDocument,
     ListClientCompanyNamesUseCase listClientCompanyNames,
     ICurrentUser currentUser) : PageModel
 {
@@ -27,6 +28,9 @@ public class IndexModel(
 
     [BindProperty(SupportsGet = true)]
     public string? SearchTerm { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? DocumentType { get; set; }
 
     [BindProperty(SupportsGet = true)]
     public int? Year { get; set; }
@@ -41,7 +45,8 @@ public class IndexModel(
     public async Task OnGetAsync(CancellationToken ct)
     {
         PageNumber = Math.Max(1, PageNumber);
-        var allDocuments = await listDocuments.ExecuteAsync(currentUser.UserId, currentUser.Role, CompanyName, SearchTerm, Year, ct);
+        var allDocuments = await listDocuments.ExecuteAsync(
+            currentUser.UserId, currentUser.Role, CompanyName, SearchTerm, DocumentType, Year, ct);
         Documents = BuildDocumentListViewModel(allDocuments, IsFirmUser, PageNumber).Documents;
         if (IsFirmUser)
         {
@@ -49,23 +54,30 @@ public class IndexModel(
         }
     }
 
-    public async Task<IActionResult> OnGetDocumentsAsync(string? companyName, string? searchTerm, int? year, int pageNumber = 1, CancellationToken ct = default)
+    public async Task<IActionResult> OnGetDocumentsAsync(
+        string? companyName,
+        string? searchTerm,
+        string? documentType,
+        int? year,
+        int pageNumber = 1,
+        CancellationToken ct = default)
     {
-        var allDocuments = await listDocuments.ExecuteAsync(currentUser.UserId, currentUser.Role, companyName, searchTerm, year, ct);
+        var allDocuments = await listDocuments.ExecuteAsync(
+            currentUser.UserId, currentUser.Role, companyName, searchTerm, documentType, year, ct);
         var viewModel = BuildDocumentListViewModel(allDocuments, IsFirmUser, pageNumber);
         Documents = viewModel.Documents;
         return Partial("_DocumentList", viewModel);
     }
 
     public async Task<IActionResult> OnPostRequestUploadAsync(
-        string fileName, string contentType, string documentType, long sizeBytes, string? notes,
+        string fileName, string rename, string contentType, string documentType, long sizeBytes, string? notes,
         CancellationToken ct)
     {
         try
         {
             var result = await requestUpload.ExecuteAsync(
                 currentUser.UserId,
-                new RequestUploadUrlCommand(fileName, contentType, documentType, sizeBytes, notes),
+                new RequestUploadUrlCommand(fileName, rename, contentType, documentType, sizeBytes, notes),
                 ct);
 
             return new JsonResult(new
@@ -75,6 +87,7 @@ public class IndexModel(
                 result.ExpiresAtUtc,
             });
         }
+
         catch (RateLimitExceededException ex)
         {
             Response.StatusCode = StatusCodes.Status429TooManyRequests;
@@ -84,6 +97,23 @@ public class IndexModel(
         {
             Response.StatusCode = StatusCodes.Status400BadRequest;
             return new JsonResult(new { error = ex.Message });
+        }
+    }
+
+    public async Task<IActionResult> OnPostDeleteAsync(Guid documentId, CancellationToken ct)
+    {
+        try
+        {
+            await deleteDocument.ExecuteAsync(documentId, currentUser.Role, ct);
+            return new JsonResult(new { success = true });
+        }
+        catch (NotFoundException)
+        {
+            return NotFound(new { error = "Dokument nije pronađen." });
+        }
+        catch (ForbiddenException)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Nemate dozvolu za brisanje dokumenata." });
         }
     }
 

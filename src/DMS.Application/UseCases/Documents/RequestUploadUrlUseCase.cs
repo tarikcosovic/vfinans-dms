@@ -27,6 +27,12 @@ public sealed class RequestUploadUrlUseCase(
         if (string.IsNullOrWhiteSpace(command.FileName))
             throw new DomainException("Naziv datoteke je obavezan.");
 
+        if (string.IsNullOrWhiteSpace(command.Rename))
+            throw new DomainException("Naziv dokumenta je obavezan.");
+
+        if (command.Rename.Trim().Length > 255)
+            throw new DomainException("Naziv dokumenta može sadržavati najviše 255 znakova.");
+
         if (string.IsNullOrWhiteSpace(command.ContentType))
             throw new DomainException("Tip sadržaja je obavezan.");
 
@@ -58,7 +64,7 @@ public sealed class RequestUploadUrlUseCase(
 
         var document = Document.CreatePending(
             documentId, ownerUserId, fileKey,
-            command.FileName, command.ContentType, documentType, command.SizeBytes,
+            command.FileName, command.Rename, command.ContentType, documentType, command.SizeBytes,
             now, command.Notes);
 
         await documents.AddAsync(document, ct);

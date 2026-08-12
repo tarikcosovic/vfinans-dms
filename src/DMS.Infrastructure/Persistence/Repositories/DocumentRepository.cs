@@ -74,6 +74,9 @@ internal sealed class DocumentRepository(DmsDbContext db) : IDocumentRepository
     public async Task AddAsync(Document document, CancellationToken ct = default) =>
         await db.Documents.AddAsync(document, ct);
 
+    public void Remove(Document document) =>
+        db.Documents.Remove(document);
+
     public Task SaveChangesAsync(CancellationToken ct = default) =>
         db.SaveChangesAsync(ct);
 }

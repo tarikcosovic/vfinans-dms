@@ -17,6 +17,7 @@ public sealed class ListDocumentsUseCase(
         string role,
         string? companyName,
         string? searchTerm,
+        string? documentType,
         int? year,
         CancellationToken ct = default)
     {
@@ -32,6 +33,12 @@ public sealed class ListDocumentsUseCase(
         if (year.HasValue)
         {
             visibleDocs = visibleDocs.Where(d => d.CreatedAtUtc.Year == year.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(documentType)
+            && Enum.TryParse<DocumentType>(documentType.Trim(), true, out var selectedDocumentType))
+        {
+            visibleDocs = visibleDocs.Where(d => d.DocumentType == selectedDocumentType);
         }
 
         var docList = visibleDocs.ToList();
@@ -52,7 +59,8 @@ public sealed class ListDocumentsUseCase(
         {
             var term = searchTerm.Trim();
             docList = docList.Where(d =>
-                d.FileName.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
+                d.FileName.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || d.Rename.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
         }
 
         return docList.Select(d => new DocumentDto(
@@ -60,6 +68,7 @@ public sealed class ListDocumentsUseCase(
             d.OwnerUserId,
             companyMap.TryGetValue(d.OwnerUserId, out var c) ? c : string.Empty,
             d.FileName,
+            string.IsNullOrWhiteSpace(d.Rename) ? d.FileName : d.Rename,
             d.ContentType,
             d.DocumentType.ToString(),
             d.SizeBytes,

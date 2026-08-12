@@ -2,6 +2,7 @@ namespace DMS.Application.DTOs.Documents;
 
 public sealed record RequestUploadUrlCommand(
     string FileName,
+    string Rename,
     string ContentType,
     string DocumentType,
     long SizeBytes,

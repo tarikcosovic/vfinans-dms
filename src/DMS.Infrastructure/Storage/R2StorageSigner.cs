@@ -54,11 +54,15 @@ internal sealed class R2StorageSigner(IAmazonS3 s3, R2Options options) : IStorag
             await s3.GetObjectMetadataAsync(options.BucketName, key, ct);
             return true;
         }
+
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             return false;
         }
     }
+
+    public async Task DeleteObjectAsync(string key, CancellationToken ct = default) =>
+        await s3.DeleteObjectAsync(options.BucketName, key, ct);
 
     private static string BuildContentDisposition(string fileName, bool asAttachment)
     {

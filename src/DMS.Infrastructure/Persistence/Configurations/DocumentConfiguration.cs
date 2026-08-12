@@ -24,6 +24,7 @@ internal sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .IsRequired();
 
         builder.Property(d => d.FileName).HasColumnName("file_name").IsRequired();
+        builder.Property(d => d.Rename).HasColumnName("rename").HasMaxLength(255).IsRequired();
         builder.Property(d => d.ContentType).HasColumnName("content_type").IsRequired();
         builder.Property(d => d.DocumentType)
             .HasColumnName("document_type")

@@ -1,5 +1,6 @@
 @page
 @model DMS.Web.Pages.Dms.IndexModel
+@using DMS.Domain.Enums
 @{
     ViewData["Title"] = "Dokumenti";
     var currentYear = DateTime.UtcNow.Year;
@@ -24,7 +25,7 @@
             <input type="hidden" id="page-input" name="pageNumber" value="@Model.PageNumber" />
             @if (Model.IsFirmUser)
             {
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="companyName" class="form-label">Kompanija</label>
                     <select id="companyName" name="companyName" class="form-select" onchange="document.getElementById('page-input').value='1';">
                         <option value="">Sve kompanije</option>
@@ -41,12 +42,29 @@
                         }
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="searchTerm" class="form-label">Naziv dokumenta</label>
                     <input id="searchTerm" name="searchTerm" class="form-control" value="@Model.SearchTerm" placeholder="Pretraži po nazivu dokumenta" oninput="document.getElementById('page-input').value='1';" />
                 </div>
             }
-            <div class="@(Model.IsFirmUser ? "col-md-2" : "col-md-3")">
+            <div class="@(Model.IsFirmUser ? "col-md-2" : "col-md-4")">
+                <label for="documentType" class="form-label">Vrsta dokumenta</label>
+                <select id="documentType" name="documentType" class="form-select" onchange="document.getElementById('page-input').value='1';">
+                    <option value="">Sve vrste</option>
+                    @foreach (var type in Enum.GetValues<DocumentType>())
+                    {
+                        if (string.Equals(Model.DocumentType, type.ToString(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            <option value="@type" selected>@type</option>
+                        }
+                        else
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="@(Model.IsFirmUser ? "col-md-2" : "col-md-4")">
                 <label for="year" class="form-label">Godina</label>
                 <select id="year" name="year" class="form-select" onchange="document.getElementById('page-input').value='1';">
                     <option value="">Sve godine</option>
@@ -63,7 +81,7 @@
                     }
                 </select>
             </div>
-            <div class="@(Model.IsFirmUser ? "col-md-2" : "col-md-3")">
+            <div class="@(Model.IsFirmUser ? "col-md-2" : "col-md-4")">
                 <button type="button" class="btn btn-outline-secondary w-100" onclick="document.getElementById('doc-filters').reset(); document.getElementById('page-input').value='1'; htmx.trigger(document.body, 'refresh-docs');">
                     <i class="bi bi-x-circle me-1"></i>Očisti filtere
                 </button>
@@ -81,6 +99,11 @@
             </div>
             <div class="card-body">
                 <form id="dms-upload-form" novalidate>
+                    <div class="mb-3">
+                        <label for="rename-input" class="form-label fw-semibold">Naziv</label>
+                        <input type="text" id="rename-input" class="form-control" maxlength="255"
+                               placeholder="Unesite naziv dokumenta" required />
+                    </div>
                     <div class="mb-3">
                         <label for="file-input" class="form-label fw-semibold">
                             Datoteka <small class="text-muted">(maks. 3 MB)</small>
@@ -140,6 +163,12 @@
                 setTimeout(function () {
                     htmx.trigger(document.body, 'refresh-docs');
                 }, 500);
+            });
+
+            document.addEventListener('htmx:afterRequest', function (e) {
+                if (e.detail.elt?.classList.contains('js-delete-doc') && e.detail.successful) {
+                    htmx.trigger(document.body, 'refresh-docs');
+                }
             });
         })();
     </script>

@@ -17,5 +17,6 @@ public interface IDocumentRepository
         DateTime sinceUtc,
         CancellationToken ct = default);
     Task AddAsync(Document document, CancellationToken ct = default);
+    void Remove(Document document);
     Task SaveChangesAsync(CancellationToken ct = default);
 }
