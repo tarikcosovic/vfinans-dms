@@ -39,10 +39,11 @@ internal sealed class UserRepository(DmsDbContext db) : IUserRepository
         return list;
     }
 
-    public async Task<IReadOnlyList<string>> ListClientCompanyNamesAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<string>> ListDocumentOwnerCompanyNamesAsync(CancellationToken ct = default)
     {
         var companies = await db.Users
-            .Where(u => u.Role == UserRole.Client && !string.IsNullOrWhiteSpace(u.CompanyName))
+            .Where(u => !string.IsNullOrWhiteSpace(u.CompanyName)
+                && db.Documents.Any(d => d.OwnerUserId == u.Id))
             .Select(u => u.CompanyName)
             .Distinct()
             .OrderBy(c => c)
