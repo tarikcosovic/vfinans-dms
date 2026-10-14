@@ -12,7 +12,7 @@ public sealed class RequestUploadUrlUseCase(
     IClock clock)
 {
     private const long MaxSizeBytes = 3L * 1024 * 1024;
-    private const int MaxUploadsPerHour = 10;
+    private const int MaxUploadsPerHour = 100;
     private static readonly TimeSpan PendingTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan DuplicateWindow = TimeSpan.FromMinutes(10);
 
