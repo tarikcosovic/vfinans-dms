@@ -20,7 +20,7 @@
 
     function setProgress(pct) {
         const wrap = document.getElementById('upload-progress-wrap');
-        const bar  = document.getElementById('upload-progress');
+        const bar = document.getElementById('upload-progress');
         if (!wrap || !bar) return;
         if (pct === 0) {
             wrap.classList.add('d-none');
@@ -55,6 +55,7 @@
         const renameInput = document.getElementById('rename-input');
         const notesInput = document.getElementById('notes-input');
         const documentTypeInput = document.getElementById('document-type-input');
+        const uploadCompanyInput = document.getElementById('upload-company-input');
         const file = fileInput?.files?.[0];
 
         if (!file) {
@@ -88,12 +89,13 @@
             setProgress(15);
 
             const urlRes = await postForm('/Dms?handler=RequestUpload', {
-                fileName:    file.name,
-                rename:      rename,
+                fileName: file.name,
+                rename: rename,
                 contentType: file.type || 'application/octet-stream',
                 documentType: documentType,
-                sizeBytes:   file.size,
-                notes:       notesInput?.value ?? '',
+                sizeBytes: file.size,
+                notes: notesInput?.value ?? '',
+                uploadCompanyName: uploadCompanyInput?.value ?? '',
             });
 
             const urlData = await urlRes.json();
@@ -135,12 +137,7 @@
             form.reset();
 
             htmx.trigger(document.body, 'refresh-docs');
-
-            setTimeout(() => {
-                const panel = document.getElementById('upload-panel');
-                if (panel) bootstrap.Collapse.getOrCreateInstance(panel).hide();
-                clearStatus();
-            }, 2500);
+            // Form stays open; auto-close timeout removed.
         } catch (err) {
             setStatus('Došlo je do neočekivane greške: ' + err.message, 'danger');
         } finally {

@@ -9,6 +9,7 @@ public interface IUserRepository
     Task<bool> EmailExistsAsync(string email, CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListPendingClientsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListActiveClientsAsync(CancellationToken ct = default);
+    Task<Guid?> GetUserIdByCompanyNameAsync(string companyName, CancellationToken ct = default);
     Task<IReadOnlyList<string>> ListDocumentOwnerCompanyNamesAsync(CancellationToken ct = default);
     Task<IReadOnlyDictionary<Guid, string>> GetCompanyNamesByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken ct = default);
     Task AddAsync(User user, CancellationToken ct = default);

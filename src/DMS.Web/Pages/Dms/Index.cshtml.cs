@@ -19,7 +19,8 @@ public class IndexModel(
     GetPreviewUrlUseCase getPreviewUrl,
     DeleteDocumentUseCase deleteDocument,
     ListClientCompanyNamesUseCase listClientCompanyNames,
-    ICurrentUser currentUser) : PageModel
+    ICurrentUser currentUser,
+    IUserRepository userRepository) : PageModel
 {
     private const int PageSize = 10;
 
@@ -38,6 +39,9 @@ public class IndexModel(
     [BindProperty(SupportsGet = true)]
     public int PageNumber { get; set; } = 1;
 
+    [BindProperty]
+    public string? UploadCompanyName { get; set; }
+
     public IReadOnlyList<DocumentDto> Documents { get; private set; } = [];
     public IReadOnlyList<string> CompanyOptions { get; private set; } = [];
     public bool IsFirmUser => currentUser.Role == RoleNames.Firm;
@@ -48,9 +52,18 @@ public class IndexModel(
         var allDocuments = await listDocuments.ExecuteAsync(
             currentUser.UserId, currentUser.Role, CompanyName, SearchTerm, DocumentType, Year, ct);
         Documents = BuildDocumentListViewModel(allDocuments, IsFirmUser, PageNumber).Documents;
-        if (IsFirmUser)
+
+        CompanyOptions = await listClientCompanyNames.ExecuteAsync(ct);
+
+        if (string.IsNullOrEmpty(UploadCompanyName))
         {
-            CompanyOptions = await listClientCompanyNames.ExecuteAsync(ct);
+            // Default to "V finans" if it exists in the options, otherwise fallback to the first item
+            UploadCompanyName = CompanyOptions.FirstOrDefault(c => string.Equals(c, "V finans", StringComparison.OrdinalIgnoreCase))
+                                ?? CompanyOptions.FirstOrDefault();
+        }
+        else if (!CompanyOptions.Contains(UploadCompanyName, StringComparer.OrdinalIgnoreCase))
+        {
+            UploadCompanyName = CompanyOptions.FirstOrDefault();
         }
     }
 
@@ -70,13 +83,22 @@ public class IndexModel(
     }
 
     public async Task<IActionResult> OnPostRequestUploadAsync(
-        string fileName, string rename, string contentType, string documentType, long sizeBytes, string? notes,
+        string fileName, string rename, string contentType, string documentType, long sizeBytes, string? notes, string? uploadCompanyName,
         CancellationToken ct)
     {
         try
         {
+            // If the user is an admin/firm user and chose a specific company, map that company name to its owner user id.
+            // If it's a regular user or no company was specified, default to the current user's ID.
+            Guid targetUserId = currentUser.UserId;
+
+            if (IsFirmUser && !string.IsNullOrWhiteSpace(uploadCompanyName))
+            {
+                targetUserId = await userRepository.GetUserIdByCompanyNameAsync(uploadCompanyName, ct) ?? currentUser.UserId;
+            }
+
             var result = await requestUpload.ExecuteAsync(
-                currentUser.UserId,
+                targetUserId,
                 new RequestUploadUrlCommand(fileName, rename, contentType, documentType, sizeBytes, notes),
                 ct);
 
@@ -87,7 +109,6 @@ public class IndexModel(
                 result.ExpiresAtUtc,
             });
         }
-
         catch (RateLimitExceededException ex)
         {
             Response.StatusCode = StatusCodes.Status429TooManyRequests;
